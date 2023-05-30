@@ -1,0 +1,6 @@
+sa-key.json
+*pycache*
+__pycache__\*
+config.json
+.env
+
