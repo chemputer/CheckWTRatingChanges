@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import requests
 from bs4 import BeautifulSoup
 url = 'https://warthunder.com/en/community/claninfo/Angels%20Of%20Death'  # Replace with the actual URL of the webpage
@@ -7,7 +9,7 @@ html_content = response.text
 soup = BeautifulSoup(html_content, 'html.parser')
 
 # Find the container element that holds the grid items using a CSS selector
-container = soup.select_one('.squadrons-members__grid')
+container = soup.select_one('.squadrons-members__table')
 
 # Extract the individual grid items
 grid_items = container.find_all('div', class_='squadrons-members__grid-item')

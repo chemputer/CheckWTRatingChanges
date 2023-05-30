@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# Copyright (c) 2023, Chemputer, All rights reserved.
+
 import requests
 from bs4 import BeautifulSoup
 import gspread
@@ -21,7 +24,7 @@ soup = BeautifulSoup(html_content, 'html.parser')
 
 # Find the table using a CSS selector
 # Find the container element that holds the grid items using a CSS selector
-container = soup.select_one('.squadrons-members__grid')
+container = soup.select_one('.squadrons-members__table')
 print(container)
 # Extract the individual grid items
 grid_items = container.find_all('div', class_='squadrons-members__grid-item')
@@ -49,7 +52,7 @@ for item in grid_items:
 rows.append(current_row)
 
 # Add headers as the first row
-rows.insert(0, headers)
+#rows.insert(0, headers)
 
 # Add the data to the Google Sheet
 sheet.clear()  # Clear the existing content in the sheet
