@@ -27,12 +27,12 @@ sheet = client.open_by_key(spreadsheet_id).sheet1  # Replace 'sheet1' with the n
 url = 'https://warthunder.com/en/community/claninfo/Angels%20Of%20Death'  # Replace with the actual URL of the webpage
 response = requests.get(url)
 html_content = response.text
-print(html_content)
+#print(html_content)
 soup = BeautifulSoup(html_content, 'html.parser')
 
 # Find the table using a CSS selector
 container = soup.select_one('.squadrons-members__table')
-print(container)
+#print(container)
 # Extract the individual grid items
 grid_items = container.find_all('div', class_='squadrons-members__grid-item')
 

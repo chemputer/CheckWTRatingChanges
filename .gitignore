@@ -3,4 +3,5 @@ sa-key.json
 __pycache__\*
 config.json
 .env
+Concept_and_Explanation.txt
 
