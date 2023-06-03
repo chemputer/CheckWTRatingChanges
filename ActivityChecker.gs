@@ -12,44 +12,73 @@ function onOpen() {
     const ui = SpreadsheetApp.getUi();
     ui.createMenu('Custom Menu').addItem('Update Changes', 'updateChanges').addToUi();
   }
+  
     /**
    * Updates players' ratings in Sheet2 based on the ratings in Sheet1.
    *
    * @param None
    * @return None
    */
-    function updateChanges() {
-        var editedSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Sheet1");
-        var targetSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Sheet2");
-        var lastRow = editedSheet.getLastRow();
-        var targetValues = targetSheet.getRange("A:C").getValues();
-        var targetMap = {};
-        for (var i = 0; i < targetValues.length; i++) {
-          targetMap[targetValues[i][0]] = {row: i + 1, count: targetValues[i][1], rating: targetValues[i][2]};
-        }
-        for (var i = 2; i <= lastRow; i++) {
-          var ratingCell = editedSheet.getRange(i, 3);
-          var playerNameCell = editedSheet.getRange(i, 2);
-          var rating = ratingCell.getValue();
-          var playerName = playerNameCell.getValue();
-          if (rating !== "") {
-            if (playerName in targetMap) {
-              // Player name already exists in Sheet2
-              // !== for the following comparison will give incorrect results, use !=
-              if (targetMap[playerName].rating != rating) {
-                //console.log("Uh oh")
-                // Ratings differ, increment the count in Column B and update the rating in Column C
-                var count = targetMap[playerName].count;
-                targetSheet.getRange(targetMap[playerName].row, 2).setValue(count + 1);
-                targetSheet.getRange(targetMap[playerName].row, 3).setValue(rating);
-              }
+  function updateChanges() {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var editedSheet = ss.getSheetByName("Sheet1");
+    var targetSheet = ss.getSheetByName("Sheet2");
+  
+    var editedRange = editedSheet.getRange(2, 2, editedSheet.getLastRow() - 1, 2);
+    var editedValues = editedRange.getValues();
+  
+    var targetRange = targetSheet.getRange(1, 1, targetSheet.getLastRow(), 5);
+    var targetValues = targetRange.getValues();
+  
+    var now = new Date();
+    now.setHours(now.getHours() - 5); // Convert to EST timezone
+    var formattedDate = Utilities.formatDate(now, "EST", "MM/dd/yyyy");
+    var formattedTime = Utilities.formatDate(now, "EST", "HH:mm:ss");
+    var dateTime = formattedDate + " " + formattedTime;
+  
+    for (var i = 0; i < editedValues.length; i++) {
+      var playerName = editedValues[i][0];
+      var rating = editedValues[i][1];
+  
+      if (!rating) {
+        continue;
+      }
+  
+      var playerExists = false;
+      for (var j = 0; j < targetValues.length; j++) {
+        var existingPlayer = targetValues[j][0];
+        var count = targetValues[j][1];
+        var existingRating = targetValues[j][2];
+  
+        if (existingPlayer === playerName) {
+          playerExists = true;
+  
+          if (existingRating != rating) {
+            targetValues[j][1] = count + 1;
+            targetValues[j][2] = rating;
+            targetSheet.getRange(j + 1, 3, 1, 2).setValues([[count + 1, rating]]);
+  
+            if (count === 0) {
+              targetValues[j][3] = dateTime;
+              targetValues[j][4] = dateTime;
+              targetSheet.getRange(j + 1, 4, 1, 2).setValues([[dateTime, dateTime]]);
             } else {
-              // Player name does not exist in Sheet2, add a new row with count 1 and the rating
-              var targetLastRow = targetSheet.getLastRow();
-              targetSheet.getRange(targetLastRow + 1, 1, 1, 3).setValues([[playerName, 1, rating]]);
-              targetMap[playerName] = {row: targetLastRow + 1, count: 1, rating: rating};
+              targetValues[j][3] = dateTime;
+              targetSheet.getRange(j + 1, 4, 1, 1).setValue(dateTime);
             }
           }
+  
+          break;
         }
       }
-      
+  
+      if (!playerExists) {
+        var targetLastRow = targetSheet.getLastRow() + 1;
+        targetValues.push([playerName, 1, rating, dateTime, ""]);
+        targetSheet.getRange(targetLastRow, 1, 1, 5).setValues([[playerName, 1, rating, dateTime, ""]]);
+      }
+    }
+  
+    targetRange.setValues(targetValues);
+  }
+  
