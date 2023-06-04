@@ -1,0 +1,5 @@
+venv/
+sa-key.json
+*.log
+scrape.sh
+
