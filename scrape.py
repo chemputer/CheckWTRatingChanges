@@ -77,6 +77,9 @@ for i in range(len(rows)):
         data_range[i * len(headers) + j].value = rows[i][j]
 
 sheet.update_cells(data_range)
+
+
+
 # Freeze the first row
 sheet.frozen_rows = 1
 sheet.update_cell(1,7, f"Python Script Last Run: {time_str}")
