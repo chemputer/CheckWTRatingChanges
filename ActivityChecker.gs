@@ -3,16 +3,8 @@
 // Copyright (c) 2023, Chemputer, All rights reserved.
 // Last Updated: 6/4/2023
 
-
 var debugConsole = false;
 
-/**
- * Creates a custom menu in the Google Sheets UI called "Script Menu" with a single
- * option to "Update Changes" which triggers the "updateChanges" function and a sub-menu
- * to sort Sheet2.
- * 
- * @return {void}
- */
 /**
  * Creates custom menus in the Google Sheets UI. 
  * The first menu is called "Script Menu" and has a single option to "Update Changes" which triggers the "updateChanges" function.
@@ -81,10 +73,6 @@ function sortByNames(sheet) {
     
 } 
 
-
-
-  
-
 function sortByLatestChange(){
   sortByColumn(4,false);
 }
@@ -139,7 +127,7 @@ function sortByColumn(col, asc, sheetName) {
     // Get the sheet by name from the active spreadsheet.
     var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
     // Get the range of columns A through E.
-    var columnToSort = sheet.getRange("A:E");
+    var columnToSort = sheet.getRange("A2:E");
     // Sort the specified column in the specified order.
     columnToSort.sort({column: col, ascending: asc});
     // Apply conditional formatting to the sorted sheet.
@@ -159,58 +147,47 @@ function sortByColumn(col, asc, sheetName) {
  * @param {string} ss - the name of the sheet to apply the formatting to
  */
 function applyConditionalFormatting(ss) {
-  // Get the sheet by name
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(ss);
-
-  // Get the last column and row of the sheet
-  var lastColumn = sheet.getLastColumn();
-  var numRows = sheet.getLastRow();
-
-  // Find the last non-empty row in column C
-  var lastNonBlankRow = numRows;
-  var columnCRange = sheet.getRange("C1:C" + numRows);
-  var values = columnCRange.getValues();
-  for (var i = numRows; i > 0; i--) {
-    if (values[i - 1][0] !== "") {
-      lastNonBlankRow = i;
-      break;
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(ss);
+  
+    var lastColumn = sheet.getLastColumn();
+    var numRows = sheet.getLastRow();
+  
+    // Find the last non-empty row in column C
+    var lastNonBlankRow = numRows;
+    var columnCRange = sheet.getRange("C1:C" + numRows);
+    var values = columnCRange.getValues();
+    for (var i = numRows; i > 0; i--) {
+      if (values[i - 1][0] !== "") {
+        lastNonBlankRow = i;
+        break;
+      }
     }
-  }
-
-  // Clear any existing formatting rules
-  var totalRowRange = sheet.getRange(1, 1, numRows, lastColumn);
-  totalRowRange.clearFormat();
-
-  // Define the alternating background colors
-  var color1 = "#ffffff"; // white
-  var color2 = "#f2f2f2"; // light gray
-
-  // Create an array to store the formatting rules
-  var rules = [];
-
-  // Loop through each row up to the last non-empty row in column C
-  for (var i = 1; i <= lastNonBlankRow; i++) {
-    // Get the range of the current row
-    var rowRange = sheet.getRange(i, 1, 1, lastColumn - 1);
-
-    // Create a new formatting rule for every other row
-    // that sets the background color to color1
-    var rule = SpreadsheetApp.newConditionalFormatRule()
-      .whenFormulaSatisfied('MOD(ROW(), 2) = 0')
-      .setBackground(color1)
-      .setRanges([rowRange])
-      .build();
-    rules.push(rule);
-
-    // Set the background color of every other odd row to color2
-    if (i % 2 === 1) {
-      rowRange.setBackground(color2);
+  
+    // Clear existing conditional formatting rules
+    var totalRowRange = sheet.getRange(1, 1, numRows, lastColumn);
+    totalRowRange.clearFormat();
+  
+    // Define the alternating background colors
+    var color1 = "#ffffff"; // white
+    var color2 = "#f2f2f2"; // light gray
+  
+    var rules = [];
+    for (var i = 1; i <= lastNonBlankRow; i++) {
+      var rowRange = sheet.getRange(i, 1, 1, lastColumn - 1);
+      var rule = SpreadsheetApp.newConditionalFormatRule()
+        .whenFormulaSatisfied('MOD(ROW(), 2) = 0')
+        .setBackground(color1)
+        .setRanges([rowRange])
+        .build();
+      rules.push(rule);
+  
+      if (i % 2 === 1) {
+        rowRange.setBackground(color2);
+      }
     }
+  
+    sheet.setConditionalFormatRules(rules);
   }
-
-  // Apply the formatting rules to the sheet
-  sheet.setConditionalFormatRules(rules);
-}
 
 
     /**
@@ -219,80 +196,75 @@ function applyConditionalFormatting(ss) {
    * @param None
    * @return None
    */
-function updateChanges() {
+
+    /**
+   * Updates players' ratings in Sheet2 based on the ratings in Sheet1.
+   *
+   * @param None
+   * @return None
+   */
+  function updateChanges() {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var editedSheet = ss.getSheetByName("Sheet1");
     var targetSheet = ss.getSheetByName("Sheet2");
-    sortByNames('Sheet2');
-    
-    var editedRange = editedSheet.getRange(2, 1, editedSheet.getLastRow() - 1, 2); // Adjusted column indices
+  
+    var editedRange = editedSheet.getRange(2, 2, editedSheet.getLastRow() - 1, 2);
     var editedValues = editedRange.getValues();
-    
+  
     var targetRange = targetSheet.getRange(1, 1, targetSheet.getLastRow(), 5);
     var targetValues = targetRange.getValues();
-    
     var changedRatings = 0;
-    
     var now = new Date();
     now.setHours(now.getHours() - 5); // Convert to EST timezone
     var formattedDate = Utilities.formatDate(now, "EST", "MM/dd/yyyy");
     var formattedTime = Utilities.formatDate(now, "EST", "HH:mm:ss");
     var dateTime = formattedDate + " " + formattedTime;
-    
+  
     for (var i = 0; i < editedValues.length; i++) {
-        var playerName = editedValues[i][0];
-        var rating = editedValues[i][1];
-    
-        if (!rating) {
+      var playerName = editedValues[i][0];
+      var rating = editedValues[i][1];
+  
+      if (!rating) {
         continue;
-        }
-    
-        var playerExists = false;
-        for (var j = 0; j < targetValues.length; j++) {
+      }
+  
+      var playerExists = false;
+      for (var j = 0; j < targetValues.length; j++) {
         var existingPlayer = targetValues[j][0];
         var count = targetValues[j][1];
         var existingRating = targetValues[j][2];
-    
+  
         if (existingPlayer === playerName) {
-            playerExists = true;
-    
-            if (existingRating != rating) {
-                changedRatings++;
-                targetValues[j][1] = count + 1;
-                targetValues[j][2] = rating;
-            
-                var rangeToUpdate = targetSheet.getRange(j + 1, 2, 1, 2); // Adjusted column indices
-                var newValues = [[count + 1, rating]];
-                rangeToUpdate.setValues(newValues);
-            
-                if (count === 0) {
-                    targetValues[j][3] = dateTime;
-                    targetValues[j][4] = dateTime;
-            
-                    var rangeToUpdate = targetSheet.getRange(j + 1, 3, 1, 2); // Adjusted column indices
-                    var newValues = [[dateTime, dateTime]];
-                    rangeToUpdate.setValues(newValues);
-                } else {
-                    targetValues[j][3] = dateTime;
-            
-                    var rangeToUpdate = targetSheet.getRange(j + 1, 3, 1, 1); // Adjusted column indices
-                    var newValues = [[dateTime]];
-                    rangeToUpdate.setValues(newValues);
-                }
+          playerExists = true;
+  
+          if (existingRating != rating) {
+            targetValues[j][1] = count + 1;
+            targetValues[j][2] = rating;
+            targetSheet.getRange(j + 1, 3, 1, 2).setValues([[count + 1, rating]]);
+  
+            if (count === 0) {
+              targetValues[j][3] = dateTime;
+              targetValues[j][4] = dateTime;
+              targetSheet.getRange(j + 1, 4, 1, 2).setValues([[dateTime, dateTime]]);
+            } else {
+              targetValues[j][3] = dateTime;
+              targetSheet.getRange(j + 1, 4, 1, 1).setValue(dateTime);
             }
-            
-
-    
-            break;
+          }
+  
+          break;
         }
-        }
-    
-        if (!playerExists) {
+      }
+  
+      if (!playerExists) {
         var targetLastRow = targetSheet.getLastRow() + 1;
         targetValues.push([playerName, 1, rating, dateTime, ""]);
         targetSheet.getRange(targetLastRow, 1, 1, 5).setValues([[playerName, 1, rating, dateTime, ""]]);
-        }
+      }
     }
+  
+    targetRange.setValues(targetValues);
+  
     
     debugOut('Number of changed ratings: ' + changedRatings, true);
     debugOut(timeStamp(),true);
@@ -300,5 +272,5 @@ function updateChanges() {
     targetSheet.getRange(1, 6).setValue(timeStamp());
     
     targetRange.setValues(targetValues);
-    sortByRatings();
+    sortByNumRatings();
 }
