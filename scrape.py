@@ -77,7 +77,19 @@ for i in range(len(rows)):
         data_range[i * len(headers) + j].value = rows[i][j]
 
 sheet.update_cells(data_range)
-# Freeze the first row
+
+
+column_f_values = sheet.col_values(6)
+last_row = len(column_f_values) - column_f_values[::-1].index(next(filter(None, column_f_values[::-1])))
+
+
+# Construct the range for sorting
+range_to_sort = 'B2:F' + str(last_row)
+
+# Sort the range in ascending order based on column B
+sheet.sort((2, 'asc'), range=range_to_sort)
+
+
 sheet.frozen_rows = 1
 sheet.update_cell(1,7, f"Python Script Last Run: {time_str}")
 print(f"Data added to Google Sheet on {time_str}.")
