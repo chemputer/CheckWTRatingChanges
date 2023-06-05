@@ -4,4 +4,4 @@ __pycache__\*
 config.json
 .env
 Concept_and_Explanation.txt
-
+*.js

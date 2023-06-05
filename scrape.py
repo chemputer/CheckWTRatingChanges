@@ -1,11 +1,17 @@
 #!/usr/bin/env python3
 # Copyright (c) 2023, Chemputer, All rights reserved.
+# Last Updated: 6/4/2023
 
 import requests
 from bs4 import BeautifulSoup
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
+from datetime import datetime
+from pytz import timezone
 
+fmt = "%Y-%m-%d %H:%M:%S %Z%z"
+now_time = datetime.now(timezone('US/Eastern'))
+time_str = now_time.strftime(fmt)
 
 # This function takes a Cloudflare encoded email as input
 def decode_cf_email(cf_email):
@@ -101,4 +107,6 @@ sheet.update_cells(data_range)
 # Freeze the first row
 sheet.frozen_rows = 1
 
-print("Data added to Google Sheet.")
+sheet.update_cell(1,7, f"Python Script Last Run: {time_str}")
+print(f"Data added to Google Sheet on {time_str}.")
+
